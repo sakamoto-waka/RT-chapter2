@@ -1,0 +1,26 @@
+version: '3'
+# 2つのサービスを定義
+services:
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    # docker内のdbに依存しておくとdocker coontainerを削除するたびにdbが消えてめんどくさい
+    # ローカル環境にあるdbと同期することでいちいちdbを追加しなくて済む設定↓↓
+    volumes:
+      - ./src/db/mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+  # railsを指定
+  web:
+    # .で今のディレクトリ内のDockerfileを参照してくれる
+    build: .
+    # railsサーバーを起動させる
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - ./src:/app
+    ports:
+      - "3000:3000"
+    # railsとmysqlを接続する、これがないと接続先のmysql側のipアドレスを指定したりと面倒
+      # 上のdbと接続してる
+    depends_on:
+      - db
